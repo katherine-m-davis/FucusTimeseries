@@ -1,0 +1,125 @@
+#### INDVAL for Fucus Time-Series by Habitat type at the Genus-Level####
+library(tidyverse)
+library(reshape2)
+library(stringr)
+library(data.table)
+library(phyloseq)
+library(dplyr)
+library(vegan)
+library(ggplot2)
+library(indicspecies)
+library(sjmisc)
+
+theme_set(theme_bw())
+setwd("~/Desktop/Desktop2020/FQ-TS/Data/")
+
+#### 16S ####
+ps.16.df <- readRDS(file = '~/Desktop/Desktop2020/FQ-TS/Data/fts.df.16.filtered.rarefied_10K.Mar2020.RDS')
+
+# Check for chloroplast and mitochondrial sequences
+length(which(ps.16.df$Family == "Mitochondria"))
+length(which(ps.16.df$Order == "Chloroplast"))
+
+# Update taxonomic assignments
+ps.16.df$Class <- ifelse(is.na(ps.16.df$Class), ifelse(str_detect(ps.16.df$Phylum, "unknown"), ps.16.df$Phylum, paste("unknown", ps.16.df$Phylum, sep="_")), ps.16.df$Class)
+ps.16.df$Order <- ifelse(is.na(ps.16.df$Order), ifelse(str_detect(ps.16.df$Class, "unknown"), ps.16.df$Class, paste("unknown", ps.16.df$Class, sep="_")), ps.16.df$Order)
+ps.16.df$Family <- ifelse(is.na(ps.16.df$Family), ifelse(str_detect(ps.16.df$Order, "unknown"), ps.16.df$Order, paste("unknown", ps.16.df$Order, sep="_")), ps.16.df$Family)
+ps.16.df$Genus <- ifelse(is.na(ps.16.df$Genus), ifelse(str_detect(ps.16.df$Family, "unknown"), ps.16.df$Family, paste("unknown", ps.16.df$Family, sep="_")), ps.16.df$Genus)
+ps.16.df$Species <- ifelse(is.na(ps.16.df$Species), ifelse(str_detect(ps.16.df$Genus, "unknown"), ps.16.df$Genus, paste("unknown", ps.16.df$Genus, sep="_")), ps.16.df$Species)
+
+ps.16.df$Class <- ifelse(str_detect(ps.16.df$Class, "uncultured"), ifelse(str_detect(ps.16.df$Phylum, "unknown"), ps.16.df$Phylum, paste("unknown", ps.16.df$Phylum, sep="_")), ps.16.df$Class)
+ps.16.df$Order <- ifelse(str_detect(ps.16.df$Order, "uncultured"), ifelse(str_detect(ps.16.df$Class, "unknown"), ps.16.df$Class, paste("unknown", ps.16.df$Class, sep="_")), ps.16.df$Order)
+ps.16.df$Family <- ifelse(str_detect(ps.16.df$Family, "uncultured"), ifelse(str_detect(ps.16.df$Order, "unknown"), ps.16.df$Order, paste("unknown", ps.16.df$Order, sep="_")), ps.16.df$Family)
+ps.16.df$Genus <- ifelse(str_detect(ps.16.df$Genus, "uncultured"), ifelse(str_detect(ps.16.df$Family, "unknown"), ps.16.df$Family, paste("unknown", ps.16.df$Family, sep="_")), ps.16.df$Genus)
+ps.16.df$Species <- ifelse(str_detect(ps.16.df$Species, "uncultured"), ifelse(str_detect(ps.16.df$Genus, "unknown"), ps.16.df$Genus, paste("unknown", ps.16.df$Genus, sep="_")), ps.16.df$Species)
+
+
+# Select and summarise by sample number, Genus, Abundance
+ps.16.g <- ps.16.df %>% group_by(Sample, Genus) %>% summarise(g_abund = sum(Abundance))
+
+#### Make table where samples are rows and genera are columns ####
+ps.16.g.w <- ps.16.g %>% spread(Genus, g_abund) %>% replace(is.na(.), 0)
+fts.16.samples <- ps.16.g.w$Sample
+rownames(ps.16.g.w) <- fts.16.samples
+ps.16.g.w <- ps.16.g.w[,-1]  
+ps.16.mat <- as.matrix(ps.16.g.w)
+
+
+#### Analysis for ASVs####
+ps.16.meta <- ps.16.df %>% select(Sample, Year:QC.ed) %>% distinct()
+rownames(ps.16.meta) <- ps.16.meta$Sample
+ps.16.meta <-ps.16.meta[ps.16.g.w$Sample,]
+
+sample_type <- as.character(ps.16.meta$Sample_type) # vector of months matching sample order in otu table
+indval.16 <- multipatt(ps.16.mat, sample_type, duleg = TRUE, control = how(nperm=999))
+capture.output(summary(indval.16, indvalcomp = T), file="indval_16S_genus_sample_type_fts.txt")
+summary(indval.16, indvalcomp = T)
+
+
+# ‘A’ is sample estimate of the probability that the surveyed site belongs to the target site 
+# group given the fact that the species has been found. This conditional probability 
+# is called the specificity or positive predictive value of the species as indicator of the site group. 
+# ‘B’ is sample estimate of the probability of finding the species
+# in sites belonging to the site group. This second conditional probability is
+# called the fidelity or sensitivity of the species as indicator of the target site group.
+
+
+#### 18S ####
+ps.18 <- readRDS(file = 'ps.18.rarefied.750.rds')
+ps.18.df <- psmelt(ps.18.r)
+ps.18.df <- ps.18.df %>% mutate_if(is.factor, as.character)
+
+# Update taxonomic assignments
+ps.18.df$Class <- ifelse(is.na(ps.18.df$Class), ifelse(str_detect(ps.18.df$Phylum, "unknown"), ps.18.df$Phylum, paste("unknown", ps.18.df$Phylum, sep="_")), ps.18.df$Class)
+ps.18.df$Order <- ifelse(is.na(ps.18.df$Order), ifelse(str_detect(ps.18.df$Class, "unknown"), ps.18.df$Class, paste("unknown", ps.18.df$Class, sep="_")), ps.18.df$Order)
+ps.18.df$Family <- ifelse(is.na(ps.18.df$Family), ifelse(str_detect(ps.18.df$Order, "unknown"), ps.18.df$Order, paste("unknown", ps.18.df$Order, sep="_")), ps.18.df$Family)
+ps.18.df$Genus <- ifelse(is.na(ps.18.df$Genus), ifelse(str_detect(ps.18.df$Family, "unknown"), ps.18.df$Family, paste("unknown", ps.18.df$Family, sep="_")), ps.18.df$Genus)
+
+ps.18.df$Class <- ifelse(str_detect(ps.18.df$Class, "uncultured"), ifelse(str_detect(ps.18.df$Phylum, "unknown"), ps.18.df$Phylum, paste("unknown", ps.18.df$Phylum, sep="_")), ps.18.df$Class)
+ps.18.df$Order <- ifelse(str_detect(ps.18.df$Order, "uncultured"), ifelse(str_detect(ps.18.df$Class, "unknown"), ps.18.df$Class, paste("unknown", ps.18.df$Class, sep="_")), ps.18.df$Order)
+ps.18.df$Family <- ifelse(str_detect(ps.18.df$Family, "uncultured"), ifelse(str_detect(ps.18.df$Order, "unknown"), ps.18.df$Order, paste("unknown", ps.18.df$Order, sep="_")), ps.18.df$Family)
+ps.18.df$Genus <- ifelse(str_detect(ps.18.df$Genus, "uncultured"), ifelse(str_detect(ps.18.df$Family, "unknown"), ps.18.df$Family, paste("unknown", ps.18.df$Family, sep="_")), ps.18.df$Genus)
+
+# Save dataframe
+saveRDS(ps.18.df, file="~/Desktop/Desktop2020/FQ-TS/Data/fts.df.18.filtered.rarefied_750.Apr2021.RDS")
+
+# Select and summarise by sample number, Genus, Abundance
+ps.18.g <- ps.18.df %>% group_by(Sample, Genus) %>% summarise(g_abund = sum(Abundance))
+
+#### Make table where samples are rows and genera are columns ####
+ps.18.g.w <- ps.18.g %>% spread(Genus, g_abund) %>% replace(is.na(.), 0)
+fts.18.samples <- ps.18.g.w$Sample
+rownames(ps.18.g.w) <- fts.18.samples
+ps.18.g.w <- ps.18.g.w[,-1]  
+ps.18.mat <- as.matrix(ps.18.g.w)
+
+
+#### Analysis for 18S genera####
+ps.18.meta <- ps.18.df %>% select(Sample, Year:QC.ed) %>% distinct()
+rownames(ps.18.meta) <- ps.18.meta$Sample
+ps.18.meta <-ps.18.meta[fts.18.samples,]
+
+sample_type <- as.character(ps.18.meta$Sample_type) # vector of months matching sample order in otu table
+indval.18 <- multipatt(ps.18.mat, sample_type, duleg = TRUE, control = how(nperm=999))
+capture.output(summary(indval.18, indvalcomp = T), file="indval_18S_genus_sample_type_fts.txt")
+summary(indval.18, indvalcomp = T)
+
+
+#### Analysis for 18S Family####
+ps.18.fam <- ps.18.df %>% group_by(Sample, Family) %>% summarise(f_abund = sum(Abundance))
+
+ps.18.f.w <- ps.18.fam %>% spread(Family, f_abund) %>% replace(is.na(.), 0)
+fts.18.samples <- ps.18.f.w$Sample
+rownames(ps.18.f.w) <- fts.18.samples
+ps.18.f.w <- ps.18.f.w[,-1]  
+ps.18.fam.mat <- as.matrix(ps.18.f.w)
+
+ps.18.meta <- ps.18.df %>% select(Sample, Year:QC.ed) %>% distinct()
+rownames(ps.18.meta) <- ps.18.meta$Sample
+ps.18.meta <-ps.18.meta[fts.18.samples,]
+
+sample_type <- as.character(ps.18.meta$Sample_type) # vector of months matching sample order in otu table
+indval.18.fam <- multipatt(ps.18.fam.mat, sample_type, duleg = TRUE, control = how(nperm=999))
+capture.output(summary(indval.18.fam, indvalcomp = T), file="indval_18S_family_sample_type_fts.txt")
+summary(indval.18.fam, indvalcomp = T)
+

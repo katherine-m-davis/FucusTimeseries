@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1620583261864.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2821679802",
+    "id" : "8A23F2A6",
+    "lastKnownWriteTime" : 1620654409,
+    "last_content_update" : 1620654409375,
+    "path" : "~/Desktop/Desktop2020/FQ-TS/FucusTimeseries/R_scripts/FQ-TS_indval_habitat_type_May2021.R",
+    "project_path" : "R_scripts/FQ-TS_indval_habitat_type_May2021.R",
+    "properties" : {
+        "cursorPosition" : "91,60",
+        "scrollLine" : "81"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

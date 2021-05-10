@@ -1,0 +1,17 @@
+
+# Check for chloroplast and mitochondrial sequences
+length(which(ps.16.df$Family == "Mitochondria"))
+length(which(ps.16.df$Order == "Chloroplast"))
+
+# Update taxonomic assignments
+ps.16.df$Class <- ifelse(is.na(ps.16.df$Class), ifelse(str_detect(ps.16.df$Phylum, "unknown"), ps.16.df$Phylum, paste("unknown", ps.16.df$Phylum, sep="_")), ps.16.df$Class)
+ps.16.df$Order <- ifelse(is.na(ps.16.df$Order), ifelse(str_detect(ps.16.df$Class, "unknown"), ps.16.df$Class, paste("unknown", ps.16.df$Class, sep="_")), ps.16.df$Order)
+ps.16.df$Family <- ifelse(is.na(ps.16.df$Family), ifelse(str_detect(ps.16.df$Order, "unknown"), ps.16.df$Order, paste("unknown", ps.16.df$Order, sep="_")), ps.16.df$Family)
+ps.16.df$Genus <- ifelse(is.na(ps.16.df$Genus), ifelse(str_detect(ps.16.df$Family, "unknown"), ps.16.df$Family, paste("unknown", ps.16.df$Family, sep="_")), ps.16.df$Genus)
+ps.16.df$Species <- ifelse(is.na(ps.16.df$Species), ifelse(str_detect(ps.16.df$Genus, "unknown"), ps.16.df$Genus, paste("unknown", ps.16.df$Genus, sep="_")), ps.16.df$Species)
+
+ps.16.df$Class <- ifelse(str_detect(ps.16.df$Class, "uncultured"), ifelse(str_detect(ps.16.df$Phylum, "unknown"), ps.16.df$Phylum, paste("unknown", ps.16.df$Phylum, sep="_")), ps.16.df$Class)
+ps.16.df$Order <- ifelse(str_detect(ps.16.df$Order, "uncultured"), ifelse(str_detect(ps.16.df$Class, "unknown"), ps.16.df$Class, paste("unknown", ps.16.df$Class, sep="_")), ps.16.df$Order)
+ps.16.df$Family <- ifelse(str_detect(ps.16.df$Family, "uncultured"), ifelse(str_detect(ps.16.df$Order, "unknown"), ps.16.df$Order, paste("unknown", ps.16.df$Order, sep="_")), ps.16.df$Family)
+ps.16.df$Genus <- ifelse(str_detect(ps.16.df$Genus, "uncultured"), ifelse(str_detect(ps.16.df$Family, "unknown"), ps.16.df$Family, paste("unknown", ps.16.df$Family, sep="_")), ps.16.df$Genus)
+ps.16.df$Species <- ifelse(str_detect(ps.16.df$Species, "uncultured"), ifelse(str_detect(ps.16.df$Genus, "unknown"), ps.16.df$Genus, paste("unknown", ps.16.df$Genus, sep="_")), ps.16.df$Species)

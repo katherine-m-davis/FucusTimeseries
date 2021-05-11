@@ -15,6 +15,7 @@ library(RVAideMemoire)
 library(BiodiversityR)
 library(purrr)
 library(ecodist)
+library(pairwiseAdonis)
 
 #setup environment
 theme_set(theme_bw())
@@ -50,7 +51,8 @@ permanova.habitat
 capture.output(permanova.habitat, file="~/Desktop/Desktop2020/FQ-TS/Data/FQ-TS_PERMANOVA_habitat_type.txt")
 
 #### Run pairwise PERMANOVA by Habitat Type ####
-
+permanova.habitat.pairwise <- map2(dist.list.ordered, dist.meta.new, ~pairwise.adonis(.x, .y$Sample_type))
+permanova.habitat.pairwise
 ##################################################################################################################
 
 ##################################################################################################################
